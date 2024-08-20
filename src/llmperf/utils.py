@@ -60,7 +60,7 @@ def randomly_sample_sonnet_lines_prompt(
     prompt_tokens_mean: int = 550,
     prompt_tokens_stddev: int = 250,
     expect_output_tokens: int = 150,
-    tokenizer = LlamaTokenizerFast.from_pretrained(
+    tokenizer=LlamaTokenizerFast.from_pretrained(
         "hf-internal-testing/llama-tokenizer")
 ) -> Tuple[str, int]:
     """Generate a prompt that randomly samples lines from a the shakespeare sonnet at sonnet.txt.
@@ -82,13 +82,23 @@ def randomly_sample_sonnet_lines_prompt(
         A tuple of the prompt and the length of the prompt.
     """
 
-    get_token_length = lambda text: len(tokenizer.encode(text))
+    def get_token_length(text): return len(tokenizer.encode(text))
 
     prompt = (
         "Randomly stream lines from the following text "
         f"with {expect_output_tokens} output tokens. "
         "Don't generate eos tokens:\n\n"
     )
+
+    image_path = pathlib.Path(__file__).parent.resolve() / "images.txt"
+    with open(image_path, "r") as image_src:
+        images = image_src.readlines()
+    random.shuffle(images)
+    image = images[0]
+
+    image_prompt = (f"Describe this {image} for me with
+                    {expect_output_tokens} output tokens.
+                    Don't generate eos tokens: \n\n")
     # get a prompt length that is at least as long as the base
     num_prompt_tokens = sample_random_positive_int(
         prompt_tokens_mean, prompt_tokens_stddev
@@ -109,13 +119,14 @@ def randomly_sample_sonnet_lines_prompt(
             if remaining_prompt_tokens - get_token_length(line_to_add) < 0:
                 # This will cut off a line in the middle of a word, but that's ok since an
                 # llm should be able to handle that.
-                line_to_add = line_to_add[: int(math.ceil(remaining_prompt_tokens))]
+                line_to_add = line_to_add[: int(
+                    math.ceil(remaining_prompt_tokens))]
                 sampling_lines = False
                 prompt += line_to_add
                 break
             prompt += line_to_add
             remaining_prompt_tokens -= get_token_length(line_to_add)
-    return (prompt, num_prompt_tokens)
+    return (image_prompt, num_prompt_tokens)
 
 
 def sample_random_positive_int(mean: int, stddev: int) -> int:
