@@ -96,18 +96,20 @@ def randomly_sample_sonnet_lines_prompt(
     random.shuffle(images)
     image = images[0]
 
-    image_prompt = (f"Describe this {image} for me with
-                    {expect_output_tokens} output tokens.
-                    Don't generate eos tokens: \n\n")
+    image_prompt = (
+        f"Describe this {image} for me with {expect_output_tokens} output tokens. "
+        "Don't generate eos tokens:\n\n"
+    )
     # get a prompt length that is at least as long as the base
     num_prompt_tokens = sample_random_positive_int(
         prompt_tokens_mean, prompt_tokens_stddev
     )
-    while num_prompt_tokens < get_token_length(prompt):
+    while num_prompt_tokens < get_token_length(image_prompt):
         num_prompt_tokens = sample_random_positive_int(
             prompt_tokens_mean, prompt_tokens_stddev
         )
-    remaining_prompt_tokens = num_prompt_tokens - get_token_length(prompt)
+    remaining_prompt_tokens = num_prompt_tokens - \
+        get_token_length(image_prompt)
     sonnet_path = pathlib.Path(__file__).parent.resolve() / "sonnet.txt"
     with open(sonnet_path, "r") as f:
         sonnet_lines = f.readlines()
